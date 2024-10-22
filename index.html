@@ -3,83 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Cafe Website</title>
+    <title>Registration Form with File Upload</title>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.13/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- AWS SDK -->
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1047.0.min.js"></script>
 </head>
-<body class="bg-gray-100">
-    <!-- Navbar -->
-    <nav class="bg-white shadow-lg">
-        <div class="container mx-auto px-6 py-3">
-            <div class="flex justify-between items-center">
-                <div>
-                    <a href="#" class="text-2xl font-bold text-gray-800 hover:text-gray-600">Cafe Aroma</a>
+<body class="bg-gray-100 flex justify-center items-center h-screen">
+    <div class="card w-96 bg-white shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title text-center">Registration Form</h2>
+            <form id="uploadForm" class="space-y-4">
+                <!-- Name -->
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Full Name</span>
+                    </label>
+                    <input type="text" placeholder="Enter your name" class="input input-bordered w-full" required />
                 </div>
-                <div class="flex space-x-4">
-                    <a href="#" class="text-gray-800 hover:text-gray-600">Home</a>
-                    <a href="#" class="text-gray-800 hover:text-gray-600">Menu</a>
-                    <a href="#" class="text-gray-800 hover:text-gray-600">About Us</a>
-                    <a href="#" class="text-gray-800 hover:text-gray-600">Contact</a>
-                </div>
-            </div>
-        </div>
-    </nav>
 
-    <!-- Hero Section -->
-    <section class="bg-cover bg-center h-screen text-white" style="background-image: url('https://github.com/handipradana/staticweb/blob/main/assets/cake.jpg?raw=true');">
-        <div class="flex items-center justify-center h-full bg-black bg-opacity-50">
-            <div class="text-center">
-                <h1 class="text-5xl font-bold mb-4">Welcome to Cafe Aroma</h1>
-                <p class="text-lg mb-6">The finest coffee experience in town</p>
-                <a href="#" class="btn btn-primary">Explore Menu</a>
-            </div>
-        </div>
-    </section>
+                <!-- Email -->
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Email</span>
+                    </label>
+                    <input type="email" placeholder="Enter your email" class="input input-bordered w-full" required />
+                </div>
 
-    <!-- Featured Menu Section -->
-    <section class="py-12 bg-white">
-        <div class="container mx-auto text-center">
-            <h2 class="text-4xl font-bold mb-6">Our Special Menu</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="card shadow-lg">
-                    <figure><img src="https://github.com/handipradana/staticweb/blob/main/assets/coffee.jpg?raw=true" alt="Coffee" /></figure>
-                    <div class="card-body">
-                        <h2 class="card-title">Cappuccino</h2>
-                        <p>A perfect blend of espresso and steamed milk.</p>
-                        <div class="card-actions justify-center">
-                            <button class="btn btn-primary">Order Now</button>
-                        </div>
-                    </div>
+                <!-- File Upload -->
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Upload File</span>
+                    </label>
+                    <input type="file" id="fileInput" class="file-input file-input-bordered w-full" required />
                 </div>
-                <div class="card shadow-lg">
-                    <figure><img src="https://github.com/handipradana/staticweb/blob/main/assets/cake.jpg?raw=true" alt="Cake" /></figure>
-                    <div class="card-body">
-                        <h2 class="card-title">Chocolate Cake</h2>
-                        <p>Rich and moist chocolate cake with layers of cream.</p>
-                        <div class="card-actions justify-center">
-                            <button class="btn btn-primary">Order Now</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="card shadow-lg">
-                    <figure><img src="https://github.com/handipradana/staticweb/blob/main/assets/latte.jpg?raw=true" alt="Latte" /></figure>
-                    <div class="card-body">
-                        <h2 class="card-title">Vanilla Latte</h2>
-                        <p>A smooth and creamy vanilla-flavored latte.</p>
-                        <div class="card-actions justify-center">
-                            <button class="btn btn-primary">Order Now</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 py-6 text-center text-white">
-        <p>&copy; 2024 Cafe Aroma. All Rights Reserved.</p>
-        <p>Made with ❤️ by Coffee Lovers.</p>
-    </footer>
+                <!-- Submit Button -->
+                <div class="form-control mt-4">
+                    <button type="submit" class="btn btn-primary w-full">Submit</button>
+                </div>
+            </form>
+
+            <div id="statusMessage" class="mt-4 text-center"></div>
+        </div>
+    </div>
+
+    <script>
+        // AWS S3 Configuration
+        AWS.config.update({
+            accessKeyId: 'youraccesskey',  // Replace with your AWS Access Key
+            secretAccessKey: 'yoursecretkey',  // Replace with your AWS Secret Key
+            sessionToken: 'yoursesssiontoken',
+            region: 'us-east-1'  // Set your desired region
+        });
+
+        const s3 = new AWS.S3();
+
+        // Handle form submission
+        document.getElementById('uploadForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (file) {
+                const params = {
+                    Bucket: yourbucket',  // Replace with your S3 bucket name
+                    Key: file.name,
+                    Body: file,
+                    ContentType: file.type,
+                    ACL: 'public-read'  // Set ACL to public-read if you want the file to be accessible publicly
+                };
+
+                s3.upload(params, function (err, data) {
+                    if (err) {
+                        document.getElementById('statusMessage').innerHTML = `<p class="text-red-500">Error uploading file: ${err.message}</p>`;
+                    } else {
+                        document.getElementById('statusMessage').innerHTML = `<p class="text-green-500">File uploaded successfully! <a href="${data.Location}" target="_blank" class="underline">View file</a></p>`;
+                    }
+                });
+            } else {
+                document.getElementById('statusMessage').innerHTML = `<p class="text-red-500">Please select a file to upload.</p>`;
+            }
+        });
+    </script>
 </body>
 </html>
